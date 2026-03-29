@@ -3,6 +3,7 @@ const fs = require("fs");
 const axios = require("axios");
 
 const BLOG_ID = process.env.BLOG_ID;
+
 const TOKEN = process.env.BLOGGER_TOKEN;
 
 async function publishPost(filePath) {
