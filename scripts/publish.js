@@ -1,9 +1,7 @@
-cat > scripts/publish.js << 'EOF'
 const fs = require("fs");
 const axios = require("axios");
 
 const BLOG_ID = process.env.BLOG_ID;
-
 const TOKEN = process.env.BLOGGER_TOKEN;
 
 async function publishPost(filePath) {
@@ -32,4 +30,3 @@ async function publishPost(filePath) {
 }
 
 publishPost("posts/post-test-automation.html");
-EOF
