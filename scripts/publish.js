@@ -31,5 +31,5 @@ async function publishPost(filePath) {
   }
 }
 
-publishPost("posts/post1.html");
+publishPost("posts/post-test-automation.html");
 EOF
