@@ -1,9 +1,10 @@
-name: Publicar HTML no Blogger
+name: Publicar posts no Blogger
 
 on:
   push:
+    branches: [main]
     paths:
-      - "posts/*.html"
+      - "posts/*.html"        # só dispara quando um post for alterado
 
 jobs:
   publish:
@@ -12,19 +13,40 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 2      # necessário para detectar arquivos alterados no push
 
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      - name: Instalar dependências
-        run: npm install axios
+      # Sem npm install — inject.js usa apenas módulos nativos do Node (fs, path, https)
 
-      - name: Executar publicação
-        run: node scripts/publish.js
+      - name: Detectar posts alterados no push
+        id: changed
+        run: |
+          FILES=$(git diff --name-only HEAD~1 HEAD -- 'posts/*.html' | tr '\n' ' ')
+          echo "files=$FILES" >> $GITHUB_OUTPUT
+          echo "Posts alterados: $FILES"
+
+      - name: Publicar posts alterados
+        if: steps.changed.outputs.files != ''
+        run: |
+          for FILE in ${{ steps.changed.outputs.files }}; do
+            echo "📤 Publicando: $FILE"
+            node scripts/inject.js "$FILE"
+          done
         env:
-          BLOG_ID: ${{ secrets.BLOG_ID }}
+          BLOG_ID:               ${{ secrets.BLOG_ID }}
           BLOGGER_REFRESH_TOKEN: ${{ secrets.BLOGGER_REFRESH_TOKEN }}
-          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
-          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          GOOGLE_CLIENT_ID:      ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET:  ${{ secrets.GOOGLE_CLIENT_SECRET }}
+
+      - name: Salvar HTMLs finais como artefato
+        if: steps.changed.outputs.files != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: posts-finais
+          path: dist/
+          retention-days: 30
