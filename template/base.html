@@ -6,369 +6,222 @@
   <title>{{POST_TITLE}}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Syne:wght@400;600;700;800&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
 
   <!-- BLOGGER_CSS_INJECT_START -->
   <style>
     :root {
-      --bg-0: #080c10;
-      --bg-1: #0c1117;
-      --bg-2: #111820;
-      --bg-3: #162030;
-      --bg-card: #0f1923;
-      --bg-sidebar: #0a1119;
+      --bg:          #080b10;
+      --bg-1:        #0d1018;
+      --bg-2:        #121620;
+      --bg-card:     #0f1319;
+      --border:      rgba(255,255,255,0.06);
+      --border-glow: rgba(0,210,170,0.3);
 
-      --border: rgba(255,255,255,0.07);
-      --border-accent: rgba(0,220,180,0.3);
+      --text-1: #dce4ee;
+      --text-2: #6b7f96;
+      --text-3: #384554;
 
-      --text-1: #d4dde8;
-      --text-2: #7a8fa8;
-      --text-3: #4a5f75;
+      --cyan:   #00d2aa;
+      --cyan-d: #009e80;
+      --blue:   #3a9fff;
+      --amber:  #f0b840;
 
-      --cyan:   #00dbb4;
-      --blue:   #3b9eff;
-      --yellow: #f0c040;
-      --green:  #3ddc84;
-      --red:    #ff5060;
-      --purple: #a78bfa;
+      --font-display: 'Syne', sans-serif;
+      --font-body:    'DM Sans', sans-serif;
+      --font-mono:    'IBM Plex Mono', monospace;
 
-      --font-sans: 'IBM Plex Sans', sans-serif;
-      --font-mono: 'IBM Plex Mono', monospace;
-      --radius: 6px;
-      --radius-lg: 10px;
+      --r: 8px;
+      --r-lg: 14px;
+      --max: 720px;
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html { scroll-behavior: smooth; }
 
     body {
-      font-family: var(--font-sans);
-      background: var(--bg-0);
+      font-family: var(--font-body);
+      background: var(--bg);
       color: var(--text-1);
-      font-size: 15px;
-      line-height: 1.75;
+      font-size: 16px;
+      line-height: 1.85;
       font-weight: 300;
       -webkit-font-smoothing: antialiased;
       min-height: 100vh;
     }
 
-    /* ── TOPBAR ── */
-    .lms-topbar {
+    /* ── fundo com grid sutil ── */
+    body::before {
+      content: '';
       position: fixed;
-      top: 0; left: 0; right: 0;
-      height: 48px;
-      background: var(--bg-1);
-      border-bottom: 1px solid var(--border);
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(0,210,170,0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,210,170,0.025) 1px, transparent 1px);
+      background-size: 48px 48px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ════════════════════════════════════════
+       BARRA DE PROGRESSO SUPERIOR
+    ════════════════════════════════════════ */
+    #read-progress-bar {
+      position: fixed;
+      top: 0; left: 0;
+      height: 2px;
+      width: 0%;
+      background: linear-gradient(90deg, var(--cyan), var(--blue));
+      box-shadow: 0 0 12px var(--cyan);
+      z-index: 999;
+      transition: width 0.08s linear;
+    }
+
+    /* ════════════════════════════════════════
+       HUD FLUTUANTE (tempo + progresso %)
+    ════════════════════════════════════════ */
+    .reading-hud {
+      position: fixed;
+      top: 1.25rem;
+      right: 1.5rem;
+      z-index: 100;
       display: flex;
       align-items: center;
-      padding: 0 2rem;
-      gap: 1.5rem;
-      z-index: 200;
+      gap: 1rem;
+      background: rgba(8,11,16,0.75);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid var(--border);
+      border-radius: 40px;
+      padding: 0.45rem 1rem;
+      animation: slideDown 0.5s 0.2s ease both;
     }
 
-    .topbar-brand {
-      font-family: var(--font-mono);
-      font-size: 0.8rem;
-      font-weight: 600;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      color: var(--text-1);
-    }
-
-    .topbar-nav {
+    .hud-item {
       display: flex;
-      gap: 0.25rem;
-      margin-left: auto;
-    }
-
-    .topbar-nav a {
+      align-items: center;
+      gap: 0.4em;
       font-family: var(--font-mono);
       font-size: 0.68rem;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
       color: var(--text-2);
-      text-decoration: none;
-      padding: 0.3em 0.8em;
-      border-radius: var(--radius);
-      transition: color 0.15s, background 0.15s;
+      letter-spacing: 0.06em;
+      white-space: nowrap;
     }
 
-    .topbar-nav a:hover {
+    .hud-item .hud-icon { opacity: 0.6; font-size: 0.75em; }
+
+    .hud-sep {
+      width: 1px; height: 12px;
+      background: var(--border);
+    }
+
+    #hud-progress-val {
       color: var(--cyan);
-      background: rgba(0,219,180,0.07);
-    }
-
-    /* ── HERO CARD ── */
-    .post-hero {
-      margin-top: 48px;
-      background: var(--bg-card);
-      border-bottom: 1px solid var(--border);
-      padding: 2rem 2.5rem 1.75rem;
-    }
-
-    .hero-tags {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.4rem;
-      margin-bottom: 1rem;
-    }
-
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.35em;
-      font-family: var(--font-mono);
-      font-size: 0.62rem;
       font-weight: 500;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      padding: 0.28em 0.7em;
-      border-radius: 3px;
-      border: 1px solid currentColor;
+      transition: color 0.3s;
     }
 
-    .badge::before { content: '✦'; font-size: 0.55em; opacity: 0.7; }
+    /* pisca quando chega a 100% */
+    .hud-complete #hud-progress-val {
+      color: var(--amber);
+      animation: pulse 1s ease infinite;
+    }
 
-    .badge-cyan   { color: var(--cyan);   background: rgba(0,219,180,0.07);  border-color: rgba(0,219,180,0.25); }
-    .badge-blue   { color: var(--blue);   background: rgba(59,158,255,0.07); border-color: rgba(59,158,255,0.25); }
-    .badge-yellow { color: var(--yellow); background: rgba(240,192,64,0.07); border-color: rgba(240,192,64,0.25); }
-    .badge-green  { color: var(--green);  background: rgba(61,220,132,0.07); border-color: rgba(61,220,132,0.25); }
-    .badge-mono   { color: var(--text-2); background: transparent; border-color: rgba(255,255,255,0.12); }
+    /* ════════════════════════════════════════
+       WRAPPER
+    ════════════════════════════════════════ */
+    .post-wrapper {
+      position: relative;
+      z-index: 1;
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: 5rem 1.5rem 2rem;
+      animation: fadeUp 0.5s ease both;
+    }
 
-    .hero-meta {
+    /* ════════════════════════════════════════
+       CABEÇALHO DO POST
+    ════════════════════════════════════════ */
+    .post-header {
+      margin-bottom: 3rem;
+      padding-bottom: 2rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .post-eyebrow {
       display: flex;
       align-items: center;
       gap: 0.6rem;
-      margin-bottom: 1.25rem;
-      flex-wrap: wrap;
+      margin-bottom: 1.1rem;
     }
 
-    .meta-item {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.35em;
+    .eyebrow-badge {
       font-family: var(--font-mono);
-      font-size: 0.68rem;
-      color: var(--text-2);
+      font-size: 0.6rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--cyan);
+      background: rgba(0,210,170,0.08);
+      border: 1px solid rgba(0,210,170,0.22);
+      padding: 0.25em 0.75em;
+      border-radius: 3px;
     }
 
-    .meta-sep { color: var(--text-3); font-size: 0.6rem; }
-
-    .meta-dot {
-      display: inline-block;
-      width: 6px; height: 6px;
-      border-radius: 50%;
-      background: var(--green);
-      box-shadow: 0 0 6px var(--green);
+    .eyebrow-date {
+      font-family: var(--font-mono);
+      font-size: 0.62rem;
+      color: var(--text-3);
+      letter-spacing: 0.08em;
     }
 
-    .post-hero h1 {
-      font-family: var(--font-sans);
-      font-size: clamp(1.5rem, 4vw, 2.1rem);
-      font-weight: 700;
-      line-height: 1.2;
-      letter-spacing: -0.01em;
-      color: #eef3f8;
+    .post-title {
+      font-family: var(--font-display);
+      font-size: clamp(1.8rem, 5vw, 2.6rem);
+      font-weight: 800;
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+      color: #edf2f8;
       margin-bottom: 0.9rem;
     }
 
-    .post-hero h1 .hl-cyan   { color: var(--cyan); }
-    .post-hero h1 .hl-blue   { color: var(--blue); }
-    .post-hero h1 .hl-yellow { color: var(--yellow); }
-
-    .post-hero .subtitle {
-      font-size: 0.9rem;
+    .post-subtitle {
+      font-size: 1rem;
       color: var(--text-2);
       font-weight: 300;
-      max-width: 640px;
-      margin-bottom: 1.25rem;
-      line-height: 1.6;
+      line-height: 1.65;
+      max-width: 580px;
     }
 
-    .hero-attrs {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 1.25rem;
-    }
-
-    .hero-attr {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4em;
-      font-family: var(--font-mono);
-      font-size: 0.68rem;
-      color: var(--text-2);
-    }
-
-    /* ── LAYOUT ── */
-    .lms-layout {
-      display: grid;
-      grid-template-columns: 220px 1fr;
-      min-height: calc(100vh - 200px);
-    }
-
-    /* ── SIDEBAR ── */
-    .lms-sidebar {
-      background: var(--bg-sidebar);
-      border-right: 1px solid var(--border);
-      padding: 1.5rem 0;
-      position: sticky;
-      top: 48px;
-      height: calc(100vh - 48px);
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .sidebar-section-label {
-      font-family: var(--font-mono);
-      font-size: 0.6rem;
-      letter-spacing: 0.16em;
-      text-transform: uppercase;
-      color: var(--text-3);
-      padding: 0 1.25rem;
-      margin-bottom: 0.6rem;
-    }
-
-    .sidebar-nav {
-      list-style: none;
-      margin-bottom: 1.5rem;
-      flex: 1;
-    }
-
-    .sidebar-nav li a {
-      display: flex;
-      align-items: center;
-      gap: 0.6em;
-      padding: 0.55rem 1.25rem;
-      font-size: 0.82rem;
-      color: var(--text-2);
-      text-decoration: none;
-      transition: background 0.15s, color 0.15s;
-      border-left: 2px solid transparent;
-      font-weight: 400;
-      cursor: pointer;
-    }
-
-    .sidebar-nav li a:hover {
-      background: rgba(255,255,255,0.04);
-      color: var(--text-1);
-    }
-
-    .sidebar-nav li.active a {
-      background: rgba(0,219,180,0.08);
-      color: var(--cyan);
-      border-left-color: var(--cyan);
-      font-weight: 500;
-    }
-
-    .sidebar-nav li .nav-dot {
-      width: 6px; height: 6px;
-      border-radius: 50%;
-      border: 1px solid currentColor;
-      flex-shrink: 0;
-      opacity: 0.5;
-    }
-
-    .sidebar-nav li.active .nav-dot {
-      background: var(--cyan);
-      border-color: var(--cyan);
-      opacity: 1;
-    }
-
-    .sidebar-progress {
-      padding: 1.25rem;
-      border-top: 1px solid var(--border);
-      margin-top: auto;
-    }
-
-    .progress-label {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 0.5rem;
-    }
-
-    .progress-label span {
-      font-family: var(--font-mono);
-      font-size: 0.62rem;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--text-3);
-    }
-
-    .progress-label .progress-frac { color: var(--cyan); }
-
-    .progress-track {
-      height: 3px;
-      background: rgba(255,255,255,0.07);
-      border-radius: 2px;
-      overflow: hidden;
-    }
-
-    .progress-fill {
-      height: 100%;
-      background: linear-gradient(90deg, var(--cyan), var(--blue));
-      border-radius: 2px;
-      width: 25%;
-      transition: width 0.4s ease;
-    }
-
-    /* ── ÁREA DE CONTEÚDO ── */
-    .lms-content { background: var(--bg-2); }
-
-    .content-tabs {
-      display: flex;
-      border-bottom: 1px solid var(--border);
-      background: var(--bg-1);
-      padding: 0 1.75rem;
-      overflow-x: auto;
-    }
-
-    .tab-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4em;
-      font-family: var(--font-mono);
-      font-size: 0.7rem;
-      letter-spacing: 0.06em;
-      padding: 0.85rem 0.9rem;
-      color: var(--text-3);
-      background: none;
-      border: none;
-      border-bottom: 2px solid transparent;
-      cursor: pointer;
-      transition: color 0.15s, border-color 0.15s;
-      white-space: nowrap;
-      margin-bottom: -1px;
-    }
-
-    .tab-btn:hover { color: var(--text-2); }
-    .tab-btn.active { color: var(--text-1); border-bottom-color: var(--cyan); }
-
-    .tab-panel { display: none; padding: 2rem 2.5rem; }
-    .tab-panel.active { display: block; }
-
-    /* ── TIPOGRAFIA DO BODY ── */
+    /* ════════════════════════════════════════
+       CORPO DO POST
+    ════════════════════════════════════════ */
     .post-body h2 {
-      font-size: 1.2rem;
-      font-weight: 600;
-      color: #dde4ed;
-      margin: 2.5rem 0 1rem;
-      padding-bottom: 0.5rem;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      gap: 0.5em;
+      font-family: var(--font-display);
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: var(--text-1);
+      margin: 2.75rem 0 1rem;
+      padding-left: 0.9rem;
+      border-left: 2px solid var(--cyan);
+      position: relative;
     }
 
-    .post-body h2::before { content: '▐'; color: var(--cyan); }
+    .post-body h2::after {
+      content: '';
+      position: absolute;
+      left: -1px; top: 50%;
+      transform: translateY(-50%);
+      width: 2px; height: 55%;
+      background: var(--blue);
+      filter: blur(5px);
+    }
 
     .post-body h3 {
-      font-size: 1rem;
+      font-family: var(--font-display);
+      font-size: 1.1rem;
       font-weight: 600;
       color: var(--text-1);
-      margin: 1.75rem 0 0.7rem;
+      margin: 2rem 0 0.8rem;
     }
 
     .post-body h4 {
@@ -377,70 +230,67 @@
       letter-spacing: 0.12em;
       text-transform: uppercase;
       color: var(--text-3);
-      margin: 1.5rem 0 0.6rem;
+      margin: 1.75rem 0 0.65rem;
     }
 
     .post-body p {
       color: var(--text-2);
-      margin-bottom: 1.2rem;
-      font-size: 0.95rem;
-      line-height: 1.85;
+      margin-bottom: 1.35rem;
+      font-size: 0.97rem;
     }
 
-    .post-body strong { color: var(--text-1); font-weight: 600; }
+    .post-body strong { color: var(--text-1); font-weight: 500; }
     .post-body em { font-style: italic; color: var(--text-1); }
 
     .post-body a {
       color: var(--cyan);
       text-decoration: none;
-      border-bottom: 1px solid rgba(0,219,180,0.3);
+      border-bottom: 1px solid rgba(0,210,170,0.28);
       transition: border-color 0.2s;
     }
-
     .post-body a:hover { border-color: var(--cyan); }
 
     .post-body ul, .post-body ol {
-      padding-left: 0;
-      margin-bottom: 1.2rem;
       list-style: none;
+      padding: 0;
+      margin-bottom: 1.35rem;
     }
 
-    .post-body ul li, .post-body ol li {
+    .post-body li {
       position: relative;
       padding-left: 1.3rem;
-      margin-bottom: 0.45rem;
+      margin-bottom: 0.5rem;
       color: var(--text-2);
-      font-size: 0.95rem;
+      font-size: 0.97rem;
     }
 
     .post-body ul li::before {
-      content: '›';
-      position: absolute;
-      left: 0;
+      content: '▸';
+      position: absolute; left: 0;
       color: var(--cyan);
-      font-weight: 700;
+      font-size: 0.7em;
+      top: 0.22em;
     }
 
-    .post-body ol { counter-reset: ol-c; }
+    .post-body ol { counter-reset: oc; }
     .post-body ol li::before {
-      counter-increment: ol-c;
-      content: counter(ol-c, decimal-leading-zero) '.';
-      position: absolute;
-      left: 0;
+      counter-increment: oc;
+      content: counter(oc, decimal-leading-zero) '.';
+      position: absolute; left: 0;
       font-family: var(--font-mono);
-      font-size: 0.65rem;
+      font-size: 0.63rem;
       color: var(--cyan);
-      top: 0.25em;
+      top: 0.28em;
     }
 
     .post-body code {
       font-family: var(--font-mono);
       font-size: 0.82em;
-      background: rgba(0,219,180,0.07);
-      border: 1px solid rgba(0,219,180,0.18);
+      background: rgba(0,210,170,0.07);
+      border: 1px solid rgba(0,210,170,0.16);
       color: var(--cyan);
-      padding: 0.12em 0.45em;
-      border-radius: 3px;
+      padding: 0.12em 0.42em;
+      border-radius: 4px;
     }
 
     .post-body pre {
@@ -448,371 +298,486 @@
       background: var(--bg-1);
       border: 1px solid var(--border);
       border-top: 2px solid var(--cyan);
-      border-radius: var(--radius-lg);
+      border-radius: var(--r-lg);
       padding: 1.5rem;
       overflow-x: auto;
-      margin: 1.5rem 0;
-      font-size: 0.82rem;
+      margin: 1.75rem 0;
+      font-size: 0.83rem;
       line-height: 1.65;
     }
 
     .post-body pre code {
-      background: none;
-      border: none;
-      color: #b8cfe0;
-      padding: 0;
+      background: none; border: none;
+      color: #b2c4d8; padding: 0;
       font-size: inherit;
     }
 
     .post-body blockquote {
-      margin: 1.5rem 0;
-      padding: 1rem 1.25rem;
-      background: rgba(59,158,255,0.05);
+      margin: 1.75rem 0;
+      padding: 1rem 1.3rem;
+      background: rgba(58,159,255,0.05);
       border-left: 2px solid var(--blue);
-      border-radius: 0 var(--radius) var(--radius) 0;
+      border-radius: 0 var(--r) var(--r) 0;
       font-style: italic;
       color: var(--text-2);
-      font-size: 0.93rem;
     }
 
     .post-body img {
       max-width: 100%;
       height: auto;
-      border-radius: var(--radius-lg);
+      border-radius: var(--r-lg);
       border: 1px solid var(--border);
-      margin: 1.5rem 0;
+      margin: 1.75rem 0;
       display: block;
     }
 
+    .post-body hr {
+      border: none;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--border), transparent);
+      margin: 2.5rem 0;
+    }
+
+    /* tabela */
     .post-body .table-wrap {
       overflow-x: auto;
-      margin: 1.5rem 0;
-      border-radius: var(--radius-lg);
+      margin: 1.75rem 0;
+      border-radius: var(--r-lg);
       border: 1px solid var(--border);
     }
-
     .post-body table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
-    .post-body thead { background: var(--bg-3); }
+    .post-body thead { background: var(--bg-2); }
     .post-body th {
       font-family: var(--font-mono);
-      font-size: 0.62rem;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--cyan);
-      padding: 0.75rem 1rem;
-      text-align: left;
-      border-bottom: 1px solid var(--border);
-      font-weight: 400;
+      font-size: 0.62rem; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--cyan);
+      padding: 0.75rem 1rem; text-align: left;
+      border-bottom: 1px solid var(--border); font-weight: 400;
     }
-
-    .post-body td {
-      padding: 0.6rem 1rem;
-      border-bottom: 1px solid var(--border);
-      color: var(--text-2);
-    }
-
+    .post-body td { padding: 0.6rem 1rem; border-bottom: 1px solid var(--border); color: var(--text-2); }
     .post-body tr:last-child td { border-bottom: none; }
-    .post-body tbody tr:hover td { background: rgba(0,219,180,0.03); color: var(--text-1); }
+    .post-body tbody tr:hover td { background: rgba(0,210,170,0.03); color: var(--text-1); }
 
-    .post-body hr { border: none; height: 1px; background: var(--border); margin: 2rem 0; }
-
-    /* ── CALLOUTS ── */
+    /* callouts */
     .callout {
-      display: flex;
-      gap: 0.85rem;
+      display: flex; gap: 0.8rem;
       padding: 1rem 1.25rem;
-      border-radius: var(--radius-lg);
-      margin: 1.5rem 0;
-      font-size: 0.88rem;
+      border-radius: var(--r-lg);
+      margin: 1.75rem 0;
       border: 1px solid;
+      font-size: 0.9rem;
     }
-
-    .callout-icon { font-size: 1rem; flex-shrink: 0; margin-top: 0.05rem; }
+    .callout-icon { flex-shrink: 0; margin-top: 0.05rem; }
     .callout-body { color: var(--text-2); line-height: 1.65; }
     .callout-body strong { display: block; font-weight: 600; margin-bottom: 0.2rem; font-size: 0.85rem; }
+    .callout.tip    { background: rgba(0,210,170,0.05); border-color: rgba(0,210,170,0.2); }
+    .callout.tip    .callout-body strong { color: var(--cyan); }
+    .callout.info   { background: rgba(58,159,255,0.05); border-color: rgba(58,159,255,0.2); }
+    .callout.info   .callout-body strong { color: var(--blue); }
+    .callout.warn   { background: rgba(240,184,64,0.05); border-color: rgba(240,184,64,0.2); }
+    .callout.warn   .callout-body strong { color: var(--amber); }
+    .callout.danger { background: rgba(255,70,80,0.05); border-color: rgba(255,70,80,0.2); }
+    .callout.danger .callout-body strong { color: #ff4650; }
 
-    .callout.info    { background: rgba(59,158,255,0.06); border-color: rgba(59,158,255,0.2); }
-    .callout.info    .callout-body strong { color: var(--blue); }
-    .callout.tip     { background: rgba(0,219,180,0.06); border-color: rgba(0,219,180,0.2); }
-    .callout.tip     .callout-body strong { color: var(--cyan); }
-    .callout.warn    { background: rgba(240,192,64,0.06); border-color: rgba(240,192,64,0.2); }
-    .callout.warn    .callout-body strong { color: var(--yellow); }
-    .callout.danger  { background: rgba(255,80,96,0.06); border-color: rgba(255,80,96,0.2); }
-    .callout.danger  .callout-body strong { color: var(--red); }
-
-    /* ── HIGHLIGHT BOX ── */
     .highlight-box {
       background: var(--bg-card);
       border: 1px solid var(--border);
       border-left: 2px solid var(--cyan);
-      border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
-      padding: 1.1rem 1.4rem;
-      margin: 1.5rem 0;
+      border-radius: 0 var(--r-lg) var(--r-lg) 0;
+      padding: 1rem 1.35rem;
+      margin: 1.75rem 0;
       color: var(--text-2);
-      font-size: 0.92rem;
+      font-size: 0.93rem;
     }
 
-    /* ── TAGS ── */
     .tag {
-      display: inline-flex;
-      align-items: center;
+      display: inline-flex; align-items: center;
       font-family: var(--font-mono);
-      font-size: 0.62rem;
-      letter-spacing: 0.08em;
+      font-size: 0.6rem; letter-spacing: 0.08em;
       text-transform: uppercase;
       padding: 0.22em 0.65em;
-      border-radius: 3px;
-      border: 1px solid currentColor;
+      border-radius: 3px; border: 1px solid currentColor;
       margin: 0.15rem;
     }
+    .tag.cyan   { color: var(--cyan);   background: rgba(0,210,170,0.07); }
+    .tag.blue   { color: var(--blue);   background: rgba(58,159,255,0.07); }
+    .tag.amber  { color: var(--amber);  background: rgba(240,184,64,0.07); }
 
-    .tag.cyan   { color: var(--cyan);   background: rgba(0,219,180,0.07); }
-    .tag.blue   { color: var(--blue);   background: rgba(59,158,255,0.07); }
-    .tag.yellow { color: var(--yellow); background: rgba(240,192,64,0.07); }
-    .tag.red    { color: var(--red);    background: rgba(255,80,96,0.07); }
-    .tag.purple { color: var(--purple); background: rgba(167,139,250,0.07); }
+    /* ════════════════════════════════════════
+       FOOTER — BOTÃO CONCLUIR
+    ════════════════════════════════════════ */
+    .post-footer {
+      margin-top: 4rem;
+      padding-top: 2.5rem;
+      border-top: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.5rem;
+      text-align: center;
+    }
 
-    /* ── SCROLLBAR ── */
-    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    /* mini barra de progresso local */
+    .footer-progress {
+      width: 100%;
+      max-width: 340px;
+    }
+
+    .footer-progress-label {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.5rem;
+    }
+
+    .footer-progress-label span {
+      font-family: var(--font-mono);
+      font-size: 0.62rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-3);
+    }
+
+    .footer-progress-label #footer-pct {
+      color: var(--cyan);
+      transition: color 0.3s;
+    }
+
+    .footer-track {
+      height: 3px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .footer-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--cyan), var(--blue));
+      border-radius: 2px;
+      transition: width 0.15s linear;
+      box-shadow: 0 0 8px rgba(0,210,170,0.4);
+    }
+
+    /* botão concluir */
+    .btn-complete {
+      position: relative;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--bg);
+      background: var(--cyan);
+      border: none;
+      border-radius: 40px;
+      padding: 0.8rem 2.5rem;
+      cursor: pointer;
+      overflow: hidden;
+      transition: transform 0.2s, box-shadow 0.2s, background 0.3s, opacity 0.3s;
+      box-shadow: 0 0 0 rgba(0,210,170,0);
+      opacity: 0.35;
+      pointer-events: none;
+    }
+
+    .btn-complete::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent);
+      pointer-events: none;
+    }
+
+    /* ativo quando leitura >= 80% */
+    .btn-complete.unlocked {
+      opacity: 1;
+      pointer-events: auto;
+      animation: unlockPop 0.5s cubic-bezier(0.34,1.56,0.64,1) both;
+    }
+
+    .btn-complete.unlocked:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 0 28px rgba(0,210,170,0.45);
+    }
+
+    .btn-complete.unlocked:active {
+      transform: translateY(0);
+    }
+
+    /* estado concluído */
+    .btn-complete.done {
+      background: var(--amber);
+      box-shadow: 0 0 28px rgba(240,184,64,0.35);
+      pointer-events: none;
+    }
+
+    .btn-hint {
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      letter-spacing: 0.08em;
+      color: var(--text-3);
+      transition: opacity 0.3s;
+    }
+
+    .btn-hint.hidden { opacity: 0; }
+
+    /* ════════════════════════════════════════
+       TOAST DE CONCLUSÃO
+    ════════════════════════════════════════ */
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--bg-card);
+      border: 1px solid rgba(0,210,170,0.3);
+      border-radius: 40px;
+      padding: 0.7rem 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      letter-spacing: 0.08em;
+      color: var(--cyan);
+      z-index: 500;
+      box-shadow: 0 0 30px rgba(0,210,170,0.15);
+      transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1), opacity 0.4s;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    /* ════════════════════════════════════════
+       SCROLLBAR
+    ════════════════════════════════════════ */
+    ::-webkit-scrollbar { width: 5px; }
     ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 3px; }
     ::-webkit-scrollbar-thumb:hover { background: var(--cyan); }
 
-    /* ── ANIMAÇÕES ── */
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(8px); }
+    /* ════════════════════════════════════════
+       ANIMAÇÕES
+    ════════════════════════════════════════ */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(14px); }
       to   { opacity: 1; transform: translateY(0); }
     }
 
-    .post-hero   { animation: fadeIn 0.4s ease both; }
-    .lms-layout  { animation: fadeIn 0.4s 0.1s ease both; }
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
 
-    /* ── RESPONSIVO ── */
-    @media (max-width: 768px) {
-      .lms-layout { grid-template-columns: 1fr; }
-      .lms-sidebar { position: static; height: auto; border-right: none; border-bottom: 1px solid var(--border); }
-      .tab-panel { padding: 1.5rem 1rem; }
-      .post-hero { padding: 1.5rem 1rem; }
-      .content-tabs { padding: 0 0.75rem; }
+    @keyframes unlockPop {
+      from { transform: scale(0.9); }
+      to   { transform: scale(1); }
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.5; }
+    }
+
+    /* ════════════════════════════════════════
+       RESPONSIVO
+    ════════════════════════════════════════ */
+    @media (max-width: 600px) {
+      body { font-size: 15px; }
+      .post-wrapper { padding: 4.5rem 1rem 2rem; }
+      .reading-hud { top: 0.75rem; right: 0.75rem; padding: 0.4rem 0.85rem; gap: 0.7rem; }
+      .post-title { font-size: 1.6rem; }
     }
   </style>
   <!-- BLOGGER_CSS_INJECT_END -->
 </head>
 <body>
 
-  <!-- TOPBAR -->
-  <header class="lms-topbar">
-    <span class="topbar-brand">{{BLOG_TITLE}}</span>
-    <nav class="topbar-nav">
-      <a href="#">Pesquisar</a>
-      <a href="#">Módulos</a>
-      <a href="#">Sobre</a>
-    </nav>
-  </header>
+  <!-- barra de progresso no topo -->
+  <div id="read-progress-bar"></div>
 
-  <!-- HERO -->
-  <div class="post-hero">
-    <div class="hero-tags">
-      <span class="badge badge-cyan">Tutorial</span>
-      <span class="badge badge-yellow">Intermediário</span>
-      <span class="badge badge-mono">{{POST_CATEGORY}}</span>
+  <!-- HUD flutuante -->
+  <div class="reading-hud" id="reading-hud">
+    <div class="hud-item">
+      <span class="hud-icon">⏱</span>
+      <span id="hud-read-time">— min</span>
     </div>
-    <div class="hero-meta">
-      <span class="meta-item">⏱ <span id="read-time">— min de leitura</span></span>
-      <span class="meta-sep">·</span>
-      <span class="meta-item"><span class="meta-dot"></span> Ativo</span>
-      <span class="meta-sep">·</span>
-      <span class="meta-item" id="post-date-meta">—</span>
-    </div>
-
-    <h1>{{POST_TITLE}}</h1>
-    <p class="subtitle">{{POST_SUBTITLE}}</p>
-
-    <div class="hero-attrs">
-      <span class="hero-attr">⏱ ~25 min</span>
-      <span class="hero-attr">📄 Documentação</span>
-      <span class="hero-attr">💻 Código executável</span>
-      <span class="hero-attr">📊 Diagrama</span>
-      <span class="hero-attr">✅ {{QUIZ_COUNT}} questões</span>
+    <div class="hud-sep"></div>
+    <div class="hud-item">
+      <span class="hud-icon">◎</span>
+      <span id="hud-progress-val">0%</span>
     </div>
   </div>
 
-  <!-- LAYOUT -->
-  <div class="lms-layout">
+  <!-- Toast de conclusão -->
+  <div class="toast" id="toast">
+    <span>✦</span> Leitura concluída — bom estudo!
+  </div>
 
-    <!-- SIDEBAR -->
-    <aside class="lms-sidebar">
-      <div class="sidebar-section-label">Neste módulo</div>
-      <ul class="sidebar-nav">
-        <li class="active" id="sli-doc">
-          <a onclick="switchTab('doc');return false;" href="#">
-            <span class="nav-dot"></span> Documentação
-          </a>
-        </li>
-        <li id="sli-code">
-          <a onclick="switchTab('code');return false;" href="#">
-            <span class="nav-dot"></span> Código executável
-          </a>
-        </li>
-        <li id="sli-diagram">
-          <a onclick="switchTab('diagram');return false;" href="#">
-            <span class="nav-dot"></span> Diagrama
-          </a>
-        </li>
-        <li id="sli-quiz">
-          <a onclick="switchTab('quiz');return false;" href="#">
-            <span class="nav-dot"></span> Quiz
-          </a>
-        </li>
-      </ul>
+  <!-- ══════════════════════════════════════════
+       CONTEÚDO PRINCIPAL
+  ══════════════════════════════════════════ -->
+  <div class="post-wrapper">
 
-      <div class="sidebar-progress">
-        <div class="progress-label">
-          <span>Progresso</span>
-          <span class="progress-frac" id="progress-frac">1 / 4</span>
-        </div>
-        <div class="progress-track">
-          <div class="progress-fill" id="progress-fill"></div>
-        </div>
+    <header class="post-header">
+      <div class="post-eyebrow">
+        <span class="eyebrow-badge">Artigo</span>
+        <span class="eyebrow-date" id="post-date">—</span>
       </div>
-    </aside>
+      <h1 class="post-title">{{POST_TITLE}}</h1>
+      <p class="post-subtitle">{{POST_SUBTITLE}}</p>
+    </header>
 
-    <!-- CONTEÚDO -->
-    <main class="lms-content">
+    <!-- ✏️ EDITE APENAS AQUI ──────────────────────────────
+         Cole o conteúdo do post dentro de .post-body.
+         CSS aplicado automaticamente pelo inject.js.
 
-      <div class="content-tabs">
-        <button class="tab-btn active" data-tab="doc">📄 Documentação</button>
-        <button class="tab-btn" data-tab="code">💻 Código executável</button>
-        <button class="tab-btn" data-tab="diagram">📊 Diagrama</button>
-        <button class="tab-btn" data-tab="quiz">✅ Quiz</button>
-      </div>
+         Classes disponíveis:
+           <div class="highlight-box">...</div>
+           <div class="callout tip|info|warn|danger">
+             <div class="callout-icon">💡</div>
+             <div class="callout-body"><strong>Título</strong>texto</div>
+           </div>
+           <span class="tag cyan|blue|amber">label</span>
+           <div class="table-wrap"><table>...</table></div>
+    ──────────────────────────────────────────────────── -->
+    <div class="post-body" id="post-body">
+      {{POST_BODY}}
+    </div>
+    <!-- ✏️ FIM DO CONTEÚDO ─────────────────────────────── -->
 
-      <!-- =====================================================
-           ✏️  PAINEL: DOCUMENTAÇÃO — cole o conteúdo do post
-           ===================================================== -->
-      <div class="tab-panel active" id="panel-doc">
-        <div class="post-body">
-          {{POST_BODY}}
+    <!-- footer com progresso + botão concluir -->
+    <footer class="post-footer">
+
+      <div class="footer-progress">
+        <div class="footer-progress-label">
+          <span>Progresso da leitura</span>
+          <span id="footer-pct">0%</span>
+        </div>
+        <div class="footer-track">
+          <div class="footer-fill" id="footer-fill"></div>
         </div>
       </div>
 
-      <!-- =====================================================
-           ✏️  PAINEL: CÓDIGO — exemplos práticos
-           ===================================================== -->
-      <div class="tab-panel" id="panel-code">
-        <div class="post-body">
-          <h2>Código executável</h2>
-          <p>Exemplos práticos do conteúdo deste módulo.</p>
-          <!-- Adicione seus blocos <pre><code> aqui -->
-        </div>
-      </div>
+      <button class="btn-complete" id="btn-complete">
+        ✦ &nbsp; Concluir leitura
+      </button>
 
-      <!-- =====================================================
-           ✏️  PAINEL: DIAGRAMA — imagens/SVGs
-           ===================================================== -->
-      <div class="tab-panel" id="panel-diagram">
-        <div class="post-body">
-          <h2>Diagrama</h2>
-          <p>Visualização do conceito apresentado neste módulo.</p>
-          <!-- Adicione suas imagens aqui -->
-        </div>
-      </div>
+      <span class="btn-hint" id="btn-hint">
+        continue lendo para desbloquear
+      </span>
 
-      <!-- =====================================================
-           ✏️  PAINEL: QUIZ — questões de fixação
-           ===================================================== -->
-      <div class="tab-panel" id="panel-quiz">
-        <div class="post-body">
-          <h2>Quiz de fixação</h2>
-          <p>Teste seu conhecimento sobre este módulo.</p>
-          <!-- Adicione suas questões aqui -->
-        </div>
-      </div>
+    </footer>
 
-    </main>
   </div>
 
   <!-- BLOGGER_JS_INJECT_START -->
   <script>
-    var TAB_ORDER = ['doc','code','diagram','quiz'];
-    var currentTab = 'doc';
-
-    function switchTab(tabId) {
-      // painéis
-      TAB_ORDER.forEach(function(id) {
-        document.getElementById('panel-' + id).classList.toggle('active', id === tabId);
-      });
-      // botões topo
-      document.querySelectorAll('.tab-btn').forEach(function(b) {
-        b.classList.toggle('active', b.dataset.tab === tabId);
-      });
-      // sidebar
-      TAB_ORDER.forEach(function(id) {
-        document.getElementById('sli-' + id).classList.toggle('active', id === tabId);
-      });
-      // progresso
-      var idx = TAB_ORDER.indexOf(tabId) + 1;
-      document.getElementById('progress-frac').textContent = idx + ' / ' + TAB_ORDER.length;
-      document.getElementById('progress-fill').style.width = (idx / TAB_ORDER.length * 100) + '%';
-      currentTab = tabId;
-    }
-
-    // bind botões do topo
-    document.querySelectorAll('.tab-btn').forEach(function(btn) {
-      btn.addEventListener('click', function() { switchTab(this.dataset.tab); });
-    });
-
-    // Data
-    (function() {
-      var el = document.getElementById('post-date-meta');
-      if (!el) return;
-      el.textContent = new Date().toLocaleDateString('pt-BR', { day:'2-digit', month:'long', year:'numeric' });
-    })();
-
-    // Tempo de leitura
-    (function() {
-      var body = document.querySelector('.post-body');
-      var el   = document.getElementById('read-time');
+    /* ── Tempo de leitura ── */
+    (function () {
+      var body = document.getElementById('post-body');
+      var el   = document.getElementById('hud-read-time');
       if (!body || !el) return;
       var words = body.innerText.trim().split(/\s+/).length;
-      el.textContent = '~' + Math.max(1, Math.round(words / 220)) + ' min de leitura';
+      var mins  = Math.max(1, Math.round(words / 220));
+      el.textContent = '~' + mins + ' min';
     })();
 
-    // Copy-to-clipboard
-    document.querySelectorAll('pre').forEach(function(block) {
+    /* ── Data ── */
+    (function () {
+      var el = document.getElementById('post-date');
+      if (!el) return;
+      el.textContent = new Date().toLocaleDateString('pt-BR', {
+        day: '2-digit', month: 'long', year: 'numeric'
+      });
+    })();
+
+    /* ── Progresso de leitura ── */
+    var progressBar  = document.getElementById('read-progress-bar');
+    var hudVal       = document.getElementById('hud-progress-val');
+    var footerFill   = document.getElementById('footer-fill');
+    var footerPct    = document.getElementById('footer-pct');
+    var btnComplete  = document.getElementById('btn-complete');
+    var btnHint      = document.getElementById('btn-hint');
+    var hud          = document.getElementById('reading-hud');
+    var toast        = document.getElementById('toast');
+    var unlocked     = false;
+    var done         = false;
+
+    function updateProgress() {
+      var docH = document.documentElement.scrollHeight - window.innerHeight;
+      var pct  = docH > 0 ? Math.min(100, Math.round((window.scrollY / docH) * 100)) : 100;
+
+      progressBar.style.width = pct + '%';
+      hudVal.textContent      = pct + '%';
+      footerFill.style.width  = pct + '%';
+      footerPct.textContent   = pct + '%';
+
+      /* desbloqueia botão aos 80% */
+      if (!unlocked && pct >= 80) {
+        unlocked = true;
+        btnComplete.classList.add('unlocked');
+        btnHint.classList.add('hidden');
+        hud.classList.add('hud-complete');
+      }
+
+      /* cor do footer-pct */
+      footerPct.style.color = pct >= 80 ? 'var(--cyan)' : 'var(--text-3)';
+    }
+
+    window.addEventListener('scroll', updateProgress, { passive: true });
+    updateProgress();
+
+    /* ── Botão concluir ── */
+    btnComplete.addEventListener('click', function () {
+      if (done) return;
+      done = true;
+      btnComplete.textContent = '✦  Leitura concluída';
+      btnComplete.classList.add('done');
+
+      /* toast */
+      toast.classList.add('show');
+      setTimeout(function () { toast.classList.remove('show'); }, 3500);
+    });
+
+    /* ── Copy-to-clipboard nos blocos <pre> ── */
+    document.querySelectorAll('pre').forEach(function (block) {
       var btn = document.createElement('button');
       btn.textContent = 'copiar';
       Object.assign(btn.style, {
-        position:'absolute', top:'10px', right:'10px',
-        padding:'3px 10px',
-        fontFamily:"'IBM Plex Mono',monospace",
-        fontSize:'11px', letterSpacing:'0.06em',
-        background:'rgba(0,219,180,0.1)', color:'#00dbb4',
-        border:'1px solid rgba(0,219,180,0.25)',
-        borderRadius:'4px', cursor:'pointer', zIndex:'10'
+        position: 'absolute', top: '10px', right: '10px',
+        padding: '3px 10px',
+        fontFamily: "'IBM Plex Mono', monospace",
+        fontSize: '11px', letterSpacing: '0.06em',
+        background: 'rgba(0,210,170,0.1)', color: '#00d2aa',
+        border: '1px solid rgba(0,210,170,0.22)',
+        borderRadius: '4px', cursor: 'pointer', zIndex: '10',
+        transition: 'all 0.2s'
       });
       block.style.position = 'relative';
       block.appendChild(btn);
-      btn.addEventListener('click', function() {
+      btn.addEventListener('click', function () {
         var code = block.querySelector('code') || block;
-        navigator.clipboard.writeText(code.innerText).then(function() {
+        navigator.clipboard.writeText(code.innerText).then(function () {
           btn.textContent = 'copiado ✓';
           btn.style.color = '#3ddc84';
           btn.style.borderColor = 'rgba(61,220,132,0.3)';
-          setTimeout(function() {
+          setTimeout(function () {
             btn.textContent = 'copiar';
-            btn.style.color = '#00dbb4';
-            btn.style.borderColor = 'rgba(0,219,180,0.25)';
+            btn.style.color = '#00d2aa';
+            btn.style.borderColor = 'rgba(0,210,170,0.22)';
           }, 2000);
         });
       });
     });
 
-    // Smooth scroll
-    document.querySelectorAll('a[href^="#"]').forEach(function(a) {
-      a.addEventListener('click', function(e) {
-        var target = document.querySelector(this.getAttribute('href'));
-        if (target) { e.preventDefault(); target.scrollIntoView({behavior:'smooth'}); }
+    /* ── Smooth scroll ── */
+    document.querySelectorAll('a[href^="#"]').forEach(function (a) {
+      a.addEventListener('click', function (e) {
+        var t = document.querySelector(this.getAttribute('href'));
+        if (t) { e.preventDefault(); t.scrollIntoView({ behavior: 'smooth' }); }
       });
     });
   </script>
