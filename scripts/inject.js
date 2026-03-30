@@ -1,9 +1,8 @@
 #!/usr/bin/env node
 /**
- * inject.js — Pipeline de publicação no Blogger
+ * inject.js — Pipeline de publicação no Blogger (LMS Edition)
  *
- * Mantém a autenticação OAuth (CLIENT_ID + CLIENT_SECRET + REFRESH_TOKEN)
- * do publish.js original e adiciona injeção de CSS+JS do template.
+ * Lê posts/meu-post.html, injeta no template/base.html e publica.
  *
  * Uso:
  *   node scripts/inject.js posts/meu-post.html
@@ -30,7 +29,6 @@ try {
   }
 } catch (_) {}
 
-// Configuração — mesmas variáveis do publish.js original
 const CONFIG = {
   templatePath : path.resolve(__dirname, '../template/base.html'),
   distDir      : path.resolve(__dirname, '../dist'),
@@ -40,7 +38,7 @@ const CONFIG = {
   refreshToken : process.env.BLOGGER_REFRESH_TOKEN || '',
 };
 
-// Gera access token via refresh token (sem axios, sem dependências externas)
+// ─── OAuth ────────────────────────────────────────────────────────────────────
 function getAccessToken() {
   return new Promise((resolve, reject) => {
     const body = JSON.stringify({
@@ -71,27 +69,77 @@ function getAccessToken() {
   });
 }
 
-// Extrai <title> do HTML
+// ─── Extratores ───────────────────────────────────────────────────────────────
+
+// Extrai <title>
 function extractTitle(html) {
   const m = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
   return m ? m[1].trim() : 'Sem título';
 }
 
-// Extrai conteúdo do <body>
-function extractBody(html) {
-  const m = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
-  return m ? m[1].trim() : html.trim();
+// Lê uma <meta name="X" content="Y"> do post
+function extractMeta(html, name, fallback = '') {
+  const re = new RegExp(`<meta\\s+name=["']${name}["']\\s+content=["']([^"']+)["']`, 'i');
+  const m  = html.match(re);
+  return m ? m[1].trim() : fallback;
 }
 
-// Injeta corpo do post no template base
+// Extrai o conteúdo do <body> e divide nos painéis via comentários <!-- PANEL:xxx -->
+function extractPanels(html) {
+  const bodyMatch = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+  const body = bodyMatch ? bodyMatch[1] : html;
+
+  // Divide o body nos marcadores <!-- PANEL:code -->, <!-- PANEL:diagram -->, <!-- PANEL:quiz -->
+  const parts   = body.split(/<!--\s*PANEL:(code|diagram|quiz)\s*-->/i);
+  const markers = [...body.matchAll(/<!--\s*PANEL:(code|diagram|quiz)\s*-->/gi)].map(m => m[1].toLowerCase());
+
+  const panels = { doc: parts[0].trim(), code: '', diagram: '', quiz: '' };
+  markers.forEach((key, i) => {
+    panels[key] = (parts[i + 1] || '').trim();
+  });
+
+  return panels;
+}
+
+// ─── Builder ──────────────────────────────────────────────────────────────────
 function buildFinalHtml(postHtml, templateHtml) {
-  const title = extractTitle(postHtml);
-  const body  = extractBody(postHtml);
-  const html  = templateHtml.replace('{{POST_TITLE}}', title).replace('{{POST_BODY}}', body);
+  const title    = extractTitle(postHtml);
+  const subtitle = extractMeta(postHtml, 'post-subtitle', 'Publicado no blog.');
+  const category = extractMeta(postHtml, 'post-category', 'Geral');
+  const badge1   = extractMeta(postHtml, 'post-badge-1', 'Artigo');
+  const badge2   = extractMeta(postHtml, 'post-badge-2', '');
+  const time     = extractMeta(postHtml, 'post-time', '~10 min');
+  const quiz     = extractMeta(postHtml, 'quiz-count', '0');
+
+  const panels   = extractPanels(postHtml);
+
+  let html = templateHtml;
+
+  // Placeholders de texto
+  html = html.replace(/\{\{POST_TITLE\}\}/g,    title);
+  html = html.replace(/\{\{POST_SUBTITLE\}\}/g,  subtitle);
+  html = html.replace(/\{\{POST_CATEGORY\}\}/g,  category);
+  html = html.replace(/\{\{POST_BADGE_1\}\}/g,   badge1);
+  html = html.replace(/\{\{POST_BADGE_2\}\}/g,   badge2);
+  html = html.replace(/\{\{POST_TIME\}\}/g,      time);
+  html = html.replace(/\{\{QUIZ_COUNT\}\}/g,     quiz);
+  html = html.replace(/\{\{BLOG_TITLE\}\}/g,     'SYSTEM LMS');
+
+  // Painéis
+  html = html.replace(/\{\{POST_BODY\}\}/g,      panels.doc);
+  html = html.replace(/\{\{PANEL_CODE\}\}/g,     panels.code);
+  html = html.replace(/\{\{PANEL_DIAGRAM\}\}/g,  panels.diagram);
+  html = html.replace(/\{\{PANEL_QUIZ\}\}/g,     panels.quiz);
+
+  // Badge 2: só mostra se existir
+  if (!badge2) {
+    html = html.replace(/<span class="badge badge-yellow">[^<]*\{\{POST_BADGE_2\}\}[^<]*<\/span>/g, '');
+  }
+
   return { title, html };
 }
 
-// Publica ou atualiza post no Blogger
+// ─── Blogger API ──────────────────────────────────────────────────────────────
 function postToBlogger({ token, title, content, isDraft, postId }) {
   return new Promise((resolve, reject) => {
     const bodyData = JSON.stringify({
@@ -132,7 +180,7 @@ function postToBlogger({ token, title, content, isDraft, postId }) {
   });
 }
 
-// Processa um arquivo de post
+// ─── Processar arquivo ────────────────────────────────────────────────────────
 async function processFile(postPath, { isDraft, postId, token }) {
   console.log(`\n📄  Processando: ${path.basename(postPath)}`);
 
@@ -140,13 +188,14 @@ async function processFile(postPath, { isDraft, postId, token }) {
     console.error(`    ❌  Arquivo não encontrado: ${postPath}`); return;
   }
   if (!fs.existsSync(CONFIG.templatePath)) {
-    console.error(`    ❌  Template não encontrado. Crie: template/base.html`); return;
+    console.error(`    ❌  Template não encontrado. Esperado em: template/base.html`); return;
   }
 
   const postHtml     = fs.readFileSync(postPath, 'utf-8');
   const templateHtml = fs.readFileSync(CONFIG.templatePath, 'utf-8');
   const { title, html: finalHtml } = buildFinalHtml(postHtml, templateHtml);
-  console.log(`    Título: "${title}"`);
+
+  console.log(`    Título:    "${title}"`);
 
   // Salva HTML final em dist/
   if (!fs.existsSync(CONFIG.distDir)) fs.mkdirSync(CONFIG.distDir, { recursive: true });
@@ -160,19 +209,19 @@ async function processFile(postPath, { isDraft, postId, token }) {
     try {
       const accessToken = token || await getAccessToken();
       const result = await postToBlogger({ token: accessToken, title, content: finalHtml, isDraft, postId });
-      console.log(`    🚀  Post ${isDraft ? 'rascunho' : 'publicado'} no Blogger!`);
+      console.log(`    🚀  Post ${isDraft ? 'salvo como rascunho' : 'publicado'} no Blogger!`);
       if (result.url) console.log(`    🔗  URL: ${result.url}`);
       if (result.id)  console.log(`    🆔  ID: ${result.id}  → use --id=${result.id} para atualizar`);
     } catch (err) {
       console.error(`    ❌  Erro ao publicar: ${err.message}`);
     }
   } else {
-    console.log(`    ⚠️   Credenciais não configuradas — HTML local gerado apenas.`);
+    console.log(`    ⚠️   Credenciais não configuradas — HTML gerado localmente apenas.`);
     console.log(`        Configure no .env: BLOG_ID, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, BLOGGER_REFRESH_TOKEN`);
   }
 }
 
-// Main
+// ─── Main ─────────────────────────────────────────────────────────────────────
 async function run(args) {
   const isDraft = args.includes('--draft');
   const isWatch = args.includes('--watch');
