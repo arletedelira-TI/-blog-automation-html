@@ -4,12 +4,11 @@
   "version": "2.0.0",
   "description": "Pipeline de automação de posts para o Blogger",
   "scripts": {
-    "pub": "node scripts/inject.js",
-    "draft": "node scripts/inject.js --draft",
-    "watch": "node scripts/inject.js --watch",
-    "pub:all": "node scripts/inject.js --all",
-    "new": "node scripts/new-post.js"
-  },
+  "pub":     "node scripts/inject.js",
+  "draft":   "node scripts/inject.js --draft",
+  "watch":   "node scripts/inject.js --watch",
+  "new":     "node scripts/new-post.js"
+},
   "engines": {
     "node": ">=16"
   }
