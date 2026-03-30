@@ -43,4 +43,4 @@ async function publishPost(filePath) {
 }
 
 
-publishPost('posts/post-test-2.html');
+publishPost('posts/novo-post.html');
