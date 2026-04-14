@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Posts/Automation Blog</title>
+
+  <!--
+  ╔══════════════════════════════════════════════════════╗
+  ║  METADADOS DO POST — preencha antes de publicar      ║
+  ╚══════════════════════════════════════════════════════╝
+
+  POST_SUBTITLE  → frase curta de descrição (aparece no hero)
+  POST_CATEGORY  → ex: Python · Fundamentos
+  POST_BADGE_1   → badge principal  ex: Tutorial
+  POST_BADGE_2   → badge secundário ex: Intermediário
+  QUIZ_COUNT     → número de questões no painel Quiz
+  POST_TIME      → tempo estimado    ex: ~25 min
+
+  Para alterar as cores dos badges edite as classes:
+    badge-cyan | badge-blue | badge-yellow | badge-green
+  -->
+
+  <meta name="post-subtitle"  content="Descreva aqui o objetivo do post em uma frase.">
+  <meta name="post-category"  content="Categoria · Subcategoria">
+  <meta name="post-badge-1"   content="Tutorial">
+  <meta name="post-badge-2"   content="Iniciante">
+  <meta name="post-time"      content="~15 min">
+  <meta name="quiz-count"     content="3">
+</head>
+<body>
+
+  <!-- ✏️ PAINEL: DOCUMENTAÇÃO ─────────────────────────────
+       Este é o conteúdo principal do post.
+       Use as classes disponíveis do template:
+
+       Títulos:    <h2>, <h3>, <h4>
+       Destaque:   <div class="highlight-box">texto</div>
+       Callout:    <div class="callout tip|info|warn|danger">
+                     <div class="callout-icon">💡</div>
+                     <div class="callout-body"><strong>Título</strong>texto</div>
+                   </div>
+       Tags:       <span class="tag cyan|blue|yellow|red|purple">label</span>
+       Tabela:     <div class="table-wrap"><table>...</table></div>
+       Código:     <pre><code>...</code></pre>
+  ──────────────────────────────────────────────────────── -->
+
+  <h2>Introdução</h2>
+  <p>meus post automatico.</p>
+
+  <h2>Primeiro tópico</h2>
+  <p>Conteúdo...</p>
+
+  <pre><code>// Exemplo de código
+console.log("Olá, mundo!");</code></pre>
+
+  <div class="callout tip">
+    <div class="callout-icon">💡</div>
+    <div class="callout-body">
+      <strong>Dica</strong>
+      Use os callouts para destacar informações importantes.
+    </div>
+  </div>
+
+  <!-- ✏️ PAINEL: CÓDIGO ────────────────────────────────────
+       Conteúdo do painel "Código executável".
+       Separe do painel principal com o comentário abaixo.
+       O inject.js detecta essa seção automaticamente.
+  ──────────────────────────────────────────────────────── -->
+  <!-- PANEL:code -->
+
+  <h2>Código executável</h2>
+  <p>Exemplos práticos deste módulo.</p>
+
+  <pre><code>// Cole seus exemplos aqui</code></pre>
+
+  <!-- PANEL:diagram -->
+
+  <!-- ✏️ PAINEL: DIAGRAMA ──────────────────────────────────
+       Adicione imagens ou SVGs para ilustrar o conteúdo.
+  ──────────────────────────────────────────────────────── -->
+  <h2>Diagrama</h2>
+  <p>Visualização do conceito deste módulo.</p>
+  <!-- <img src="..." alt="diagrama"> -->
+
+  <!-- PANEL:quiz -->
+
+  <!-- ✏️ PAINEL: QUIZ ─────────────────────────────────────
+       Adicione questões de múltipla escolha ou abertas.
+  ──────────────────────────────────────────────────────── -->
+  <h2>Quiz de fixação</h2>
+  <p>Teste seu conhecimento.</p>
+
+</body>
+</html>
